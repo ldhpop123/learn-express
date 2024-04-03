@@ -1,0 +1,18 @@
+{
+  "name": "learn-express",
+  "version": "0.0.1",
+  "description": "익스프레스 프로젝트 시작하기",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app"
+  },
+  "author": "이동휘",
+  "license": "MIT",
+  "dependencies": {
+    "expres": "^0.0.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
