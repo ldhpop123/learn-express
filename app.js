@@ -60,12 +60,52 @@ app.use(session({
         // secure: false -> http 가 아닌 환경헤서도 사용할 수 있음.
     // name : 'session-cookie' -> 세션 쿠키의 이름을 'session-cookie'로 지정
 
-// 미들웨어 사용 설정 -> 미들웨어는 app.use와 함께 사용됨.
-// 미들웨어는 위에서부터 아래 순서대로 실행되면서 요청과 응답 사이에 특별한 기능을 추가할 수 있음.
-app.use((req, res, next) => {
-    console.log('모든 요청에 다 실행됩니다')
-    next();
-})
+const multer = require('multer'); // multer -> 파일 업로드 처리하는 라이브러리
+const fs = require('fs'); // fs -> 파일 시스템을 다루는 노드 내장 모듈
+
+// 'upload' 폴더가 있는지 확인하고, 없을 경우 새로 생성
+try {
+    // 동기적으로 'upload' 폴더 확인
+    fs.readdirSync('uploads');
+} catch (error) {
+    console.error('uploads 폴더가 없어 uploads 폴더를 생성합니다.');
+    // 동기적으로 'upload' 폴더 생성
+    fs.mkdirSync('uploads');
+}
+
+// multer를 이용하여 파일 업로드를 처리하기 위한 미들웨어 설정
+const upload = multer({
+    // 파일이 저장될 경로와 파일명 설정
+    storage: multer.diskStorage({
+        destination(req, file, done) {
+            done(null, 'uploads/'); // 파일이 저장될 경로
+        },
+        filename(req, file, done) {
+            // 파일 확장자 추출
+            const ext = path.extname(file.originalname);
+            // 파일명에 현재 시간을 더하여 중복을 피함
+            done(null, path.basename(file.originalname, ext) + Date.now() + ext);
+        }
+    }),
+    // 업로드될 파일의 최대 크기 제한 -> 5MB(5 * 1024 * 1024byte)로 설정
+    limits: { filesize: 5 * 1024 * 1024},
+});
+
+// '/upload' 경로로 GET 요청 -> multipart.html 파일을 클라이언트에게 전송
+app.get('/upload', (req,res) => {
+    res.sendFile(path.join(__dirname, 'multipart.html'));
+});
+
+// '/upload' 경로로 POST 요청이 오면, upload 미들웨어 사용 -> 이미지 파일을 업로드
+app.post('/upload', upload.single('image'), (req, res) => {
+    //upload.singlr('image') -> 'image'라는 필드에 단일 파일을 업로드하겠다는 의미
+    // 업로드된 파일은 req.file 객체에 저장됨.
+    console.log(req.file);
+    // 업로드된 파일 정보를 콘솔에 출력
+    res.send('ok');
+});
+
+
     // app.use(미들웨어) -> 모든 요청에서 미들웨어 실행
     // app.use('abc', 미들웨어) -> abc로 시작되는 요청에서 미들웨어 실행
     // app.post('abc', 미들웨어) -> abc로 시작되는 POST 요청에서 미들웨어가 실행되지 않음.
